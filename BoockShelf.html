@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BookShelf - Mi Biblioteca Digital</title>
+  <!-- Enlace a la hoja de estilos externa -->
+  <link rel="stylesheet" href="bookShelf.css">
+  <!-- Font Awesome para los iconos de lápiz (editar), papelera (eliminar) y usuario -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Encabezado de la Aplicación -->
+  <header class="main-header">
+    <div class="header-container">
+      <h1 class="logo">BookShelf</h1>
+      <div class="user-profile">
+        <i class="fa-regular fa-user"></i>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Título y Subtítulo Principal -->
+    <section class="hero-section">
+      <div class="hero-text">
+        <h2>Mi biblioteca Digital</h2>
+        <p>Organiza tus lecturas actuales y futuras</p>
+      </div>
+    </section>
+
+    <!-- Barra de Control: Filtros y Botón de Añadir -->
+    <section class="controls-bar">
+      <div class="filters">
+        <button class="filter-btn active" data-filter="Todos">Todos</button>
+        <button class="filter-btn" data-filter="Pendiente">Pendientes</button>
+        <button class="filter-btn" data-filter="Leyendo">Leyendo</button>
+        <button class="filter-btn" data-filter="Terminado">Terminados</button>
+      </div>
+      <button class="btn-add" id="openAddModalBtn">
+        <i class="fa-solid fa-plus"></i> Añadir nuevo libro
+      </button>
+    </section>
+
+    <!-- Cuadrícula / Galería de Libros (Se renderiza dinámicamente desde JS) -->
+    <section class="books-grid" id="booksGrid"></section>
+  </main>
+
+  <!-- ================= MODALES DE INTERACCIÓN ================= -->
+
+  <!-- 1. Modal: Detalle de Libro -->
+  <div class="modal" id="detailModal">
+    <div class="modal-content detail-card">
+      <button class="close-modal-btn" id="closeDetailBtn">&times;</button>
+      
+      <div class="detail-header">
+        <img id="detailImg" src="" alt="Portada del libro">
+      </div>
+      
+      <div class="detail-body">
+        <h3 id="detailTitle">Título del Libro</h3>
+        <p class="detail-author" id="detailAuthor">Autor</p>
+        
+        <div class="detail-actions">
+          <button class="action-btn preview-btn"><i class="fa-solid fa-book-open"></i> Vista previa</button>
+          <button class="action-btn library-btn"><i class="fa-solid fa-check"></i> Biblioteca</button>
+        </div>
+
+        <div class="detail-tags">
+          <span class="status-badge" id="detailStatusBadge">Estado</span>
+          <span class="genre-badge" id="detailGenre">Género</span>
+        </div>
+
+        <div class="detail-description" id="detailDescription">
+          <!-- Descripción dinámica -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. Modal: Confirmar Eliminación -->
+  <div class="modal" id="deleteModal">
+    <div class="modal-content delete-card">
+      <h3>¿Eliminar de tu biblioteca?</h3>
+      <div class="delete-actions">
+        <button class="confirm-delete-btn" id="confirmDeleteBtn">
+          <i class="fa-solid fa-check"></i>
+        </button>
+        <button class="cancel-delete-btn" id="cancelDeleteBtn">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Modal: Formulario Dinámico (Añadir / Editar) -->
+  <div class="modal" id="addBookModal">
+    <div class="modal-content form-card">
+      <button class="close-modal-btn" id="closeAddModalBtn">&times;</button>
+      <!-- El título cambiará dinámicamente entre "Añadir" y "Editar" mediante JS -->
+      <h3 id="formModalTitle">Añadir Nuevo Libro</h3>
+      
+      <form id="addBookForm">
+        <!-- Input oculto para guardar el ID cuando se edita un libro -->
+        <input type="hidden" id="formBookId" value="">
+
+        <div class="form-group">
+          <label for="formTitle">Título del libro *</label>
+          <input type="text" id="formTitle" required placeholder="Ej. Cien años de soledad">
+        </div>
+        <div class="form-group">
+          <label for="formAuthor">Autor *</label>
+          <input type="text" id="formAuthor" required placeholder="Ej. Gabriel García Márquez">
+        </div>
+        <div class="form-group">
+          <label for="formGenre">Género / Tag</label>
+          <input type="text" id="formGenre" placeholder="Ej. Realismo Mágico, Ciencia Ficción">
+        </div>
+        <div class="form-group">
+          <label for="formStatus">Estado de lectura</label>
+          <select id="formStatus">
+            <option value="Leyendo">Leyendo</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="Terminado">Terminado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="formCover">URL de la imagen de portada de Internet</label>
+          <input type="url" id="formCover" placeholder="https://ejemplo.com/portada-de-internet.jpg">
+        </div>
+        <div class="form-group">
+          <label for="formDesc">Descripción / Sinopsis</label>
+          <textarea id="formDesc" rows="3" placeholder="Escribe un breve resumen o notas personales..."></textarea>
+        </div>
+        <!-- El botón cambiará dinámicamente de texto usando JS -->
+        <button type="submit" class="submit-btn" id="submitFormBtn">Guardar en biblioteca</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Enlace al archivo de JavaScript externo encargado de la interactividad -->
+  <script src="bookShelf.js"></script>
+</body>
+</html>
