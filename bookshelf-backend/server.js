@@ -1,11 +1,15 @@
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json()); // Permite que nuestro servidor entienda datos en formato JSON
+
+// Servir archivos estáticos desde el directorio padre
+app.use(express.static(path.join(__dirname, '..')));
 
 // Configuración de la conexión a MySQL usando los datos de tu .env
 const db = mysql.createPool({
@@ -69,8 +73,14 @@ app.delete('/api/books/:id', (req, res) => {
   });
 });
 
+// Servir index.html para la raíz y rutas no capturadas
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'index.html'));
+});
+
 // Iniciar el servidor
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor API corriendo en http://localhost:${PORT}`);
 });
+
