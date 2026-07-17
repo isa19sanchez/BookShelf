@@ -1,7 +1,30 @@
-// ================= URL DE TU SERVIDOR API =================
-const API_URL = 'https://bookshelf-7u19.onrender.com/api/books';
+// ================= CONFIGURACIÓN E IMPORTACIONES DE FIREBASE =================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { 
+  getFirestore, 
+  collection, 
+  getDocs, 
+  addDoc, 
+  doc, 
+  updateDoc, 
+  deleteDoc 
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// El array de libros ahora empieza vacío y se llenará desde la base de datos
+// TODO: Reemplaza este objeto con tus credenciales reales desde la consola de Firebase
+const firebaseConfig = {
+  apiKey: "TU_API_KEY",
+  authDomain: "bookshelf-6d52c.firebaseapp.com",
+  projectId: "bookshelf-6d52c",
+  storageBucket: "bookshelf-6d52c.appspot.com",
+  messagingSenderId: "TU_SENDER_ID",
+  appId: "TU_APP_ID"
+};
+
+// Inicializar Firebase y la base de datos Firestore
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// El array de libros ahora empieza vacío y se llenará desde Firestore
 let books = [];
 let currentFilter = 'Todos';
 let selectedBookId = null;
@@ -25,19 +48,26 @@ const closeAddModalBtn = document.getElementById('closeAddModalBtn');
 const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
 const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 
-// ================= LLAMADAS ASÍNCRONAS A LA API (fetch) =================
+// ================= LLAMADAS ASÍNCRONAS A FIREBASE FIRESTORE =================
 
-// 1. OBTENER LIBROS: Carga la lista directamente de MySQL
+// 1. OBTENER LIBROS: Carga la lista directamente desde la colección 'books' de Firestore
 async function fetchBooks() {
   try {
-    const response = await fetch(API_URL);
-    if (!response.ok) throw new Error('Error al conectar con la API');
-    
-    books = await response.json();
+    const querySnapshot = await getDocs(collection(db, "books"));
+    books = []; // Limpiamos el array local antes de rellenarlo
+
+    querySnapshot.forEach((doc) => {
+      // Guardamos los datos del libro junto con su ID único de Firestore
+      books.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
     renderBooks();
   } catch (error) {
-    console.error('❌ Error cargando libros:', error);
-    booksGrid.innerHTML = `<p class="no-books">Error al conectar con el servidor. Revisa si "node server.js" está corriendo.</p>`;
+    console.error('❌ Error cargando libros de Firestore:', error);
+    booksGrid.innerHTML = `<p class="no-books">Error al conectar con la base de datos de Firebase. Revisa las reglas de seguridad o tu configuración.</p>`;
   }
 }
 
@@ -175,7 +205,7 @@ function openEditModal(book) {
   openModal(addBookModal);
 }
 
-// ================= ENVÍO DEL FORMULARIO (POST O PUT A TU API) =================
+// ================= ENVÍO DEL FORMULARIO (ADD O UPDATE EN FIRESTORE) =================
 addBookForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -192,30 +222,21 @@ addBookForm.addEventListener('submit', async (e) => {
 
   try {
     if (bookId) {
-      // Modo Edición: Petición PUT a la API
-      const response = await fetch(`${API_URL}/${bookId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(bookData)
-      });
-      if (!response.ok) throw new Error('Error al actualizar el libro');
+      // Modo Edición: Actualizar documento existente en Firestore
+      const bookRef = doc(db, "books", bookId);
+      await updateDoc(bookRef, bookData);
     } else {
-      // Modo Adición: Petición POST a la API
-      const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(bookData)
-      });
-      if (!response.ok) throw new Error('Error al crear el libro');
+      // Modo Adición: Crear un nuevo documento en Firestore
+      await addDoc(collection(db, "books"), bookData);
     }
 
-    // Volver a pedir la lista de libros actualizada a la base de datos
+    // Volver a pedir la lista de libros actualizada a Firestore
     await fetchBooks();
     addBookForm.reset();
     closeModal(addBookModal);
   } catch (error) {
-    console.error('❌ Error en el formulario:', error);
-    alert('Ocurrió un error al intentar guardar los datos en MySQL.');
+    console.error('❌ Error en el formulario con Firebase:', error);
+    alert('Ocurrió un error al intentar guardar los datos en Firebase.');
   }
 });
 
@@ -231,21 +252,19 @@ openAddModalBtn.addEventListener('click', () => {
   openModal(addBookModal);
 });
 
-// Confirmar eliminación de libro en base de datos (Petición DELETE)
+// Confirmar eliminación de libro en Firestore (Delete)
 confirmDeleteBtn.addEventListener('click', async () => {
   if (!selectedBookId) return;
 
   try {
-    const response = await fetch(`${API_URL}/${selectedBookId}`, {
-      method: 'DELETE'
-    });
-    if (!response.ok) throw new Error('Error al eliminar');
+    const bookRef = doc(db, "books", selectedBookId);
+    await deleteDoc(bookRef);
 
-    await fetchBooks(); // Sincroniza desde MySQL
+    await fetchBooks(); // Sincroniza desde Firestore
     closeModal(deleteModal);
   } catch (error) {
-    console.error('❌ Error al eliminar libro:', error);
-    alert('No se pudo borrar el libro de la base de datos.');
+    console.error('❌ Error al eliminar libro de Firestore:', error);
+    alert('No se pudo borrar el libro de Firebase.');
   }
 });
 
@@ -262,5 +281,5 @@ window.addEventListener('click', (e) => {
 });
 
 // ================= INICIALIZACIÓN =================
-// Cargamos los datos desde el backend en vez de usar el array estático
+// Cargamos los datos directamente desde Firestore
 fetchBooks();
